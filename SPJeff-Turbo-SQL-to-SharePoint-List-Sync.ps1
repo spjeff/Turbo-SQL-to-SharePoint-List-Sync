@@ -30,7 +30,7 @@ function Write-Yellow($message) {
 # PowerShell Modules
 # from https://stackoverflow.com/questions/28740320/how-do-i-check-if-a-powershell-module-is-installed
 Write-Yellow "Loading PowerShell modules..."
-@("SQLServer", "PNP.PowerShell") | % {
+@("SQLServer", "PNP.PowerShell") | ForEach-Object {
     if (!(Get-Module -ListAvailable -Name $_)) {
         Write-Yellow "Installing module: $_"
         Install-Module -Name $_ -Force
@@ -104,7 +104,7 @@ function ProcessSQLtoSPLISTSync($xmlSource, $xmlDestination, $xmlMapping) {
 
     # Dynamic schema.  SPLIST always has [Id] and [Title] fields.  Append SQL columns to SPLIST fields
     $spFields = "Id", $sqlPrimaryKey
-    $sqlSource[0].Table.Columns | ? { $_.ColumnName -ne $sqlPrimaryKey } | % { $spFields += $_.ColumnName }
+    $sqlSource[0].Table.Columns | Where-Object { $_.ColumnName -ne $sqlPrimaryKey } | ForEach-Object { $spFields += $_.ColumnName }
 
     # Connect to SPO and get SPLIST items with dynamic schema
     Connect-PnPOnline -Url $spUrl -ClientId $spClientId -ClientSecret $spClientSecret -WarningAction "Silentlycontinue"
@@ -143,7 +143,7 @@ function ProcessSQLtoSPLISTSync($xmlSource, $xmlDestination, $xmlMapping) {
 
         # Primary key search, if row exists
         $pk = $row[$sqlPrimaryKey]
-        $spMatchItem = $spDestination | ? { $_[$sqlPrimaryKey] -eq $pk }
+        $spMatchItem = $spDestination | Where-Object { $_[$sqlPrimaryKey] -eq $pk }
 
         # First matched SPLIST row only
         if ($spMatchItem -is [System.Array]) {
@@ -194,8 +194,8 @@ function Main() {
     [xml]$config = Get-Content "SPJeff-Turbo-SQL-to-SharePoint-List-Sync.xml"
     foreach ($mapping in $config.config.mappings) {
         # Get source and destination from config
-        $source = $config.config.sources | ? { $_.name -eq $mapping.source }
-        $destination = $config.config.destinations | ? { $_.name -eq $mapping.destination }
+        $source = $config.config.sources | Where-Object { $_.name -eq $mapping.source }
+        $destination = $config.config.destinations | Where-Object { $_.name -eq $mapping.destination }
 
         # Process SQL source to SPLIST destination sync
         ProcessSQLtoSPLISTSync $source $destination $mapping

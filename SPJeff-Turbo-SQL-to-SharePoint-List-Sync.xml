@@ -10,12 +10,12 @@
 <config>
     <!-- SQL server connections -->
     <sources>
-        <source name="NorthwindCustomers" server="spjeff-sql.database.windows.net" database="northwind" username="spjeff-sa" password="ubrjE57fTwRi7mAdI5g6"/>
+        <source name="NorthwindCustomers" server="spjeff-sql.database.windows.net" database="northwind" username="" password=""/>
     </sources>
 
     <!-- SharePoint SPLIST connections -->
     <destinations>
-        <destination name="SPOCustomers" url="https://spjeffdev.sharepoint.com/sites/Turbo-SQL-to-SharePoint-List-Sync" clientid="62b2ccbb-0b86-40ef-8e19-e2fe0cc933cd" clientsecret="4THU7epMYB2VGgFhFs4McTDJhHtHFYNTSHycYVX9iBk="/>
+        <destination name="SPOCustomers" url="https://spjeffdev.sharepoint.com/sites/Turbo-SQL-to-SharePoint-List-Sync" clientid="" clientsecret=""/>
     </destinations>
 
     <!-- SQL to SharePoint mappings from SQL columns to SPLIST fields-->
