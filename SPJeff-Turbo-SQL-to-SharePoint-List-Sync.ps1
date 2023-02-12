@@ -30,11 +30,12 @@ function Write-Yellow($message) {
 # PowerShell Modules
 # from https://stackoverflow.com/questions/28740320/how-do-i-check-if-a-powershell-module-is-installed
 Write-Yellow "Loading PowerShell modules..."
-@("SQLServer", "PNP.PowerShell") |% {
+@("SQLServer", "PNP.PowerShell") | % {
     if (!(Get-Module -ListAvailable -Name $_)) {
         Write-Yellow "Installing module: $_"
         Install-Module -Name $_ -Force
-    } else {
+    }
+    else {
         Write-Yellow "Loading module: $_"
         Import-Module $_ -ErrorAction "SilentlyContinue" -WarningAction "SilentlyContinue" | Out-Null
     }
@@ -103,22 +104,23 @@ function Main() {
 
     # Dynamic schema.  SPLIST always has [Id] and [Title] fields.  Append SQL columns to SPLIST fields
     $spFields = "Id", $sqlPrimaryKey
-    $sqlSource[0].Table.Columns |? {$_.ColumnName -ne $sqlPrimaryKey} |% { $spFields += $_.ColumnName}
+    $sqlSource[0].Table.Columns | ? { $_.ColumnName -ne $sqlPrimaryKey } | % { $spFields += $_.ColumnName }
 
     # Connect to SPO and get SPLIST items with dynamic schema
     Connect-PnPOnline -Url $spUrl -ClientId $spClientId -ClientSecret $spClientSecret -WarningAction "Silentlycontinue"
     $spDestination = Get-PnPListItem -List Customer -Fields $spFields -PageSize "4000"
 
     # Measure changes to SPLIST
-    $added   = 0
+    $added = 0
     $updated = 0
     $deleted = 0
-
+    
     # Measure SPLIST rows before and after
     $beforeCount = $spDestination.Count
-    $afterCount  = $sqlSource.Count
+    $afterCount = $sqlSource.Count
 
     # STEP 3 - Delete excess SPLIST items on destination by comparing primary keys
+    $spBatch = New-PnPBatch
     foreach ($item in $spDestination) { 
         # Primary Key
         $pk = $item[$sqlPrimaryKey]
@@ -126,11 +128,12 @@ function Main() {
         # Loop comparison
         if ($sqlSource.$sqlPrimaryKey -notcontains $pk) {
             # Delete row
-            Remove-PnPListItem -List $spListName -Identity $item.Id -Force
+            Remove-PnPListItem -List $spListName -Identity $item.Id -Batch $spBatch
             $deleted = $deleted + 1
             Write-Yellow "Deleted: $pk"
         }
     }
+    Invoke-PnPBatch -Batch $spBatch -Force
 
     # STEP 4 - Add or update SPLIST items on destination by comparing primary keys
     $spBatch = New-PnPBatch
@@ -162,11 +165,11 @@ function Main() {
         }
         else {
             # If row does exist, update it
-            $needUpdate = Compare-Object $hash $hashsp
+            $needUpdate = (ConvertTo-Json $hash) -ne (ConvertTo-Json $hashsp)
             if ($needUpdate) {
                 # Update row
                 Write-Yellow "Updated: $pk"
-                Set-PnPListItem -List $spListName -Identity $spMatchItem.Id -Values $hash -Batch $spBatch
+                Set-PnPListItem -List $spListName -Identity $spMatchItem.Id -Values $row -Batch $spBatch
                 $updated = $updated + 1
                 $needUpdate = $false
             }
