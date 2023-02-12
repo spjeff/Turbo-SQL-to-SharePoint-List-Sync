@@ -108,7 +108,7 @@ function Main() {
 
     # Connect to SPO and get SPLIST items with dynamic schema
     Connect-PnPOnline -Url $spUrl -ClientId $spClientId -ClientSecret $spClientSecret -WarningAction "Silentlycontinue"
-    $spDestination = Get-PnPListItem -List Customer -Fields $spFields -PageSize "4000"
+    $spDestination = Get-PnPListItem -List $spListName -Fields $spFields -PageSize "4000"
 
     # Measure changes to SPLIST
     $added = 0
@@ -153,7 +153,7 @@ function Main() {
         # Format objects consistently for [Compare-Object] support
         if ($spMatchItem) {
             $hashsp = ([Hashtable]$spMatchItem.FieldValues) | Select-Object ($spFields | Select-Object -Skip 1)
-            $hashsp.CustomerId = [int]$hashsp.CustomerId
+            $hashsp."$sqlPrimaryKey" = [int]$hashsp."$sqlPrimaryKey"
         }
 
         # If row does not exist, add it
