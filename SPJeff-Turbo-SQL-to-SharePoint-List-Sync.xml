@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPJeff-Turbo-SQL-to-SharePoint-List-Sync.xml -->
+<!-- This is the main configuration file for the SPJeff Turbo SQL to SharePoint List Sync tool. -->
+<!-- This file is used to configure the SQL server connections, SharePoint list connections, and the SQL to SharePoint mappings. -->
+<!-- The SQL server connections are configured in the <sources> section. -->
+<!-- The SharePoint list connections are configured in the <destinations> section. -->
+<!-- The SQL to SharePoint mappings are configured in the <mappings> section. -->
+<!-- Learn more at https://www.spjeff.com/2023/02/11/turbo-sql-to-sharepoint-list-sync-powershell-ps1/-->
+
+<config>
+    <!-- SQL server connections -->
+    <sources>
+        <source name="NorthwindCustomers" server="spjeff-sql.database.windows.net" database="northwind" username="spjeff-sa" password="ubrjE57fTwRi7mAdI5g6"/>
+    </sources>
+
+    <!-- SharePoint SPLIST connections -->
+    <destinations>
+        <destination name="SPOCustomers" url="https://spjeffdev.sharepoint.com/sites/Turbo-SQL-to-SharePoint-List-Sync" clientid="62b2ccbb-0b86-40ef-8e19-e2fe0cc933cd" clientsecret="4THU7epMYB2VGgFhFs4McTDJhHtHFYNTSHycYVX9iBk="/>
+    </destinations>
+
+    <!-- SQL to SharePoint mappings from SQL columns to SPLIST fields-->
+    <mappings>
+        <mapping source="NorthwindCustomers" destination="SPOCustomers" query="SELECT * FROM [dbo].[Customer]" primarykey="CustomerId" list="Customer" />
+    </mappings>
+</config>

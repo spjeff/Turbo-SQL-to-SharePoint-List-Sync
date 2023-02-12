@@ -14,7 +14,7 @@
     File Name:  SPJeff-Turbo-SQL-to-SharePoint-List-Sync.ps1
     Version:    1.0
     Author:     Jeff Jones - @spjeff
-    Modified:   2021-02-25
+    Modified:   2021-02-12
 .LINK
     https://github.com/spjeff/Turbo-SQL-to-SharePoint-List-Sync
 #>
@@ -83,23 +83,23 @@ function ConvertFrom-DataRow {
     }
 }
 
-# Main application
-function Main() {
+function ProcessSQLtoSPLISTSync($xmlSource, $xmlDestination, $xmlMapping) {
+    
     # STEP 1 - Connect SQL
-    $sqlQuery = "SELECT * FROM [dbo].[Customer]"
-    $sqlServer = "spjeff-sql.database.windows.net"
-    $sqlDatabase = "northwind"
-    $sqlUser = ""
-    $sqlPass = ""
-    $sqlPrimaryKey = "CustomerId"
+    $sqlQuery = $xmlMapping.query
+    $sqlServer = $xmlDestination.server
+    $sqlDatabase = $xmlDestination.database
+    $sqlUser = $xmlDestination.username
+    $sqlPass = $xmlSource.password
+    $sqlPrimaryKey = $xmlMapping.primarykey
     $sqlSource = Invoke-Sqlcmd -Query $sqlQuery -ServerInstance $sqlServer -Database $sqlDatabase -Username $sqluser -Password $sqlpass
     $sqlSourceHash = $sqlSource | ConvertFrom-DataRow
 
     # STEP 2 - Connect SPO
-    $spUrl = "https://spjeffdev.sharepoint.com/sites/Turbo-SQL-to-SharePoint-List-Sync"
-    $spClientId = ""
-    $spClientSecret = ""
-    $spListName = "Customer" 
+    $spUrl = $xmlDestination.url
+    $spClientId = $xmlDestination.clientid
+    $spClientSecret = $xmlDestination.clientsecret
+    $spListName = $xmlDestination.list
     $spMatchItem = $null
 
     # Dynamic schema.  SPLIST always has [Id] and [Title] fields.  Append SQL columns to SPLIST fields
@@ -186,6 +186,20 @@ function Main() {
     Write-Yellow "Added      = $added"
     Write-Yellow "Updated    = $updated"
     Write-Yellow "Deleted    = $deleted"
+}
+
+# Main application
+function Main() {
+    # Load XML config and loop through each mapping
+    [xml]$config = Get-Content "SPJeff-Turbo-SQL-to-SharePoint-List-Sync.xml"
+    foreach ($mapping in $config.config.mappings) {
+        # Get source and destination from config
+        $source = $config.config.sources | ? { $_.name -eq $mapping.source }
+        $destination = $config.config.destinations | ? { $_.name -eq $mapping.destination }
+
+        # Process SQL source to SPLIST destination sync
+        ProcessSQLtoSPLISTSync $source $destination $mapping
+    }
 }
 
 # Open LOG with script name
