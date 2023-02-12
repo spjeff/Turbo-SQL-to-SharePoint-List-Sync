@@ -129,7 +129,7 @@ function Main() {
         if ($sqlSource.$sqlPrimaryKey -notcontains $pk) {
             # Delete row
             Remove-PnPListItem -List $spListName -Identity $item.Id -Batch $spBatch
-            $deleted = $deleted + 1
+            $deleted++
             Write-Yellow "Deleted: $pk"
         }
     }
@@ -170,7 +170,7 @@ function Main() {
                 # Update row
                 Write-Yellow "Updated: $pk"
                 Set-PnPListItem -List $spListName -Identity $spMatchItem.Id -Values $row -Batch $spBatch
-                $updated = $updated + 1
+                $updated++
                 $needUpdate = $false
             }
         }
